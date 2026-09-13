@@ -26,12 +26,12 @@ export const StatCard: React.FC<StatCardProps> = ({
   className,
 }) => {
   const variantCard = {
-    blue: 'border-slate-200 hover:border-blue-300 dark:border-blue-500/20 dark:hover:border-blue-500/40 bg-white dark:bg-slate-900 dark:bg-gradient-to-br dark:from-blue-950/40 dark:to-slate-900 text-blue-600 dark:text-blue-400',
-    emerald: 'border-slate-200 hover:border-emerald-300 dark:border-emerald-500/20 dark:hover:border-emerald-500/40 bg-white dark:bg-slate-900 dark:bg-gradient-to-br dark:from-emerald-950/40 dark:to-slate-900 text-emerald-600 dark:text-emerald-400',
-    amber: 'border-slate-200 hover:border-amber-300 dark:border-amber-500/20 dark:hover:border-amber-500/40 bg-white dark:bg-slate-900 dark:bg-gradient-to-br dark:from-amber-950/40 dark:to-slate-900 text-amber-600 dark:text-amber-400',
-    rose: 'border-slate-200 hover:border-rose-300 dark:border-rose-500/20 dark:hover:border-rose-500/40 bg-white dark:bg-slate-900 dark:bg-gradient-to-br dark:from-rose-950/40 dark:to-slate-900 text-rose-600 dark:text-rose-400',
-    purple: 'border-slate-200 hover:border-purple-300 dark:border-purple-500/20 dark:hover:border-purple-500/40 bg-white dark:bg-slate-900 dark:bg-gradient-to-br dark:from-purple-950/40 dark:to-slate-900 text-purple-600 dark:text-purple-400',
-    slate: 'border-slate-200 hover:border-slate-300 dark:border-slate-800 dark:hover:border-slate-700 bg-white dark:bg-slate-900 text-slate-600 dark:text-slate-400',
+    blue: 'border-slate-200 hover:border-blue-300 dark:border-slate-800 dark:hover:border-blue-500/40 bg-white dark:bg-slate-900/60 text-blue-600 dark:text-blue-400',
+    emerald: 'border-slate-200 hover:border-emerald-300 dark:border-slate-800 dark:hover:border-emerald-500/40 bg-white dark:bg-slate-900/60 text-emerald-600 dark:text-emerald-400',
+    amber: 'border-slate-200 hover:border-amber-300 dark:border-slate-800 dark:hover:border-amber-500/40 bg-white dark:bg-slate-900/60 text-amber-600 dark:text-amber-400',
+    rose: 'border-slate-200 hover:border-rose-300 dark:border-slate-800 dark:hover:border-rose-500/40 bg-white dark:bg-slate-900/60 text-rose-600 dark:text-rose-400',
+    purple: 'border-slate-200 hover:border-purple-300 dark:border-slate-800 dark:hover:border-purple-500/40 bg-white dark:bg-slate-900/60 text-purple-600 dark:text-purple-400',
+    slate: 'border-slate-200 hover:border-slate-300 dark:border-slate-800 dark:hover:border-slate-700 bg-white dark:bg-slate-900/60 text-slate-600 dark:text-slate-400',
   };
 
   const iconBg = {

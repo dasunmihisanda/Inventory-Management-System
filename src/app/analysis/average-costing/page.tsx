@@ -93,7 +93,7 @@ export default function AverageCostingPage() {
       </div>
 
       {/* Formula & Explanation Card */}
-      <div className="rounded-2xl bg-blue-50/60 dark:bg-slate-900 dark:bg-gradient-to-r dark:from-blue-950/40 dark:via-slate-900 dark:to-slate-900 border border-blue-200 dark:border-blue-900/40 p-5 shadow-xs dark:shadow-lg">
+      <div className="rounded-2xl bg-blue-50/60 dark:bg-slate-900/60 border border-blue-200 dark:border-blue-900/40 p-5 shadow-xs dark:shadow-lg">
         <div className="flex items-start gap-3">
           <div className="p-2 rounded-xl bg-blue-100 dark:bg-blue-500/10 text-blue-600 dark:text-blue-400 border border-blue-200 dark:border-blue-500/20 shrink-0">
             <Info className="w-5 h-5" />
