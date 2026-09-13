@@ -1,26 +1,130 @@
 @import "tailwindcss";
 
+@variant dark (&:where(.dark, .dark *));
+
 :root {
-  --background: #ffffff;
-  --foreground: #171717;
+  --background: #f8fafc;
+  --foreground: #0f172a;
+  --card-bg: #ffffff;
+  --card-border: #e2e8f0;
+  --card-hover: #f1f5f9;
+  --primary: #2563eb;
+  --accent: #0284c7;
+  --success: #059669;
+  --warning: #d97706;
+  --danger: #dc2626;
+  --muted: #64748b;
+  --muted-light: #475569;
+  --table-th-bg: #f8fafc;
+  --table-th-color: #475569;
+  --table-td-color: #0f172a;
+  --table-hover-bg: #f1f5f9;
+  --border-color: #e2e8f0;
+  --scrollbar-track: #f1f5f9;
+  --scrollbar-thumb: #cbd5e1;
 }
 
-@theme inline {
-  --color-background: var(--background);
-  --color-foreground: var(--foreground);
-  --font-sans: var(--font-geist-sans);
-  --font-mono: var(--font-geist-mono);
-}
-
-@media (prefers-color-scheme: dark) {
-  :root {
-    --background: #0a0a0a;
-    --foreground: #ededed;
-  }
+.dark {
+  --background: #0b0f17;
+  --foreground: #f1f5f9;
+  --card-bg: #111928;
+  --card-border: #1e293b;
+  --card-hover: #17233f;
+  --primary: #3b82f6;
+  --accent: #06b6d4;
+  --success: #10b981;
+  --warning: #f59e0b;
+  --danger: #ef4444;
+  --muted: #64748b;
+  --muted-light: #94a3b8;
+  --table-th-bg: rgba(15, 23, 42, 0.75);
+  --table-th-color: #94a3b8;
+  --table-td-color: #e2e8f0;
+  --table-hover-bg: rgba(30, 41, 59, 0.5);
+  --border-color: #1e293b;
+  --scrollbar-track: #0f172a;
+  --scrollbar-thumb: #334155;
 }
 
 body {
-  background: var(--background);
+  background-color: var(--background);
   color: var(--foreground);
-  font-family: Arial, Helvetica, sans-serif;
+  font-family: var(--font-geist-sans), -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+  font-weight: 400; /* Geist Regular */
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+  transition: background-color 0.2s ease, color 0.2s ease;
+}
+
+/* Custom modern scrollbars */
+::-webkit-scrollbar {
+  width: 6px;
+  height: 6px;
+}
+
+::-webkit-scrollbar-track {
+  background: var(--scrollbar-track);
+}
+
+::-webkit-scrollbar-thumb {
+  background: var(--scrollbar-thumb);
+  border-radius: 4px;
+}
+
+::-webkit-scrollbar-thumb:hover {
+  background: #94a3b8;
+}
+
+/* High-density financial data tables */
+.data-table th {
+  letter-spacing: 0.05em;
+  font-size: 0.72rem;
+  font-weight: 600;
+  text-transform: uppercase;
+  color: var(--table-th-color);
+  padding: 0.75rem 1rem;
+  border-bottom: 1px solid var(--border-color);
+  background-color: var(--table-th-bg);
+}
+
+.data-table td {
+  padding: 0.875rem 1rem;
+  border-bottom: 1px solid var(--border-color);
+  font-size: 0.875rem;
+  color: var(--table-td-color);
+}
+
+.data-table tr:hover td {
+  background-color: var(--table-hover-bg);
+}
+
+/* Print Styles for Audit Reports */
+@media print {
+  body {
+    background: #ffffff !important;
+    color: #000000 !important;
+  }
+  aside, header, button:not(.print-include), .no-print {
+    display: none !important;
+  }
+  main {
+    margin: 0 !important;
+    padding: 0 !important;
+    width: 100% !important;
+  }
+  .card, .data-table {
+    border: 1px solid #e2e8f0 !important;
+    box-shadow: none !important;
+    background: #ffffff !important;
+    color: #000000 !important;
+  }
+  .data-table th {
+    background: #f8fafc !important;
+    color: #000000 !important;
+    border-color: #cbd5e1 !important;
+  }
+  .data-table td {
+    border-color: #e2e8f0 !important;
+    color: #000000 !important;
+  }
 }
