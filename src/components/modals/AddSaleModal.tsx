@@ -4,6 +4,7 @@ import React, { useState } from 'react';
 import { Modal } from '@/components/ui/Modal';
 import { useInventory } from '@/context/InventoryContext';
 import { CheckCircle2, TrendingUp, AlertCircle } from 'lucide-react';
+import { handleNumericInput } from '@/lib/utils';
 
 interface AddSaleModalProps {
   isOpen: boolean;
@@ -22,8 +23,8 @@ export const AddSaleModal: React.FC<AddSaleModalProps> = ({
   const [date, setDate] = useState(new Date().toISOString().split('T')[0]);
   const [itemCode, setItemCode] = useState(preselectedItemCode || (items[0]?.code ?? ''));
   const [customer, setCustomer] = useState('');
-  const [qty, setQty] = useState<number>(1);
-  const [unitValue, setUnitValue] = useState<number>(0);
+  const [qty, setQty] = useState<number | string>(1);
+  const [unitValue, setUnitValue] = useState<number | string>(0);
   const [feedback, setFeedback] = useState<{ type: 'success' | 'error'; message: string } | null>(null);
 
   React.useEffect(() => {
@@ -41,8 +42,11 @@ export const AddSaleModal: React.FC<AddSaleModalProps> = ({
   const availableQty = selectedItem?.availableQty || 0;
   const unitCost = selectedItem?.avcoUnitCost || 0;
 
-  const totalRevenue = qty * unitValue;
-  const estimatedCost = qty * unitCost;
+  const numQty = parseInt(String(qty)) || 0;
+  const numUnitValue = parseFloat(String(unitValue)) || 0;
+
+  const totalRevenue = numQty * numUnitValue;
+  const estimatedCost = numQty * unitCost;
   const estimatedProfit = totalRevenue - estimatedCost;
   const estimatedMargin = totalRevenue > 0 ? (estimatedProfit / totalRevenue) * 100 : 0;
 
@@ -50,16 +54,21 @@ export const AddSaleModal: React.FC<AddSaleModalProps> = ({
     e.preventDefault();
     setFeedback(null);
 
-    if (qty <= 0) {
+    if (numQty <= 0) {
       setFeedback({ type: 'error', message: 'Sales quantity must be greater than 0.' });
       return;
     }
 
-    if (qty > availableQty) {
+    if (numQty > availableQty) {
       setFeedback({
         type: 'error',
         message: `Insufficient stock! Only ${availableQty} units available (excluding damaged units).`,
       });
+      return;
+    }
+
+    if (numUnitValue <= 0) {
+      setFeedback({ type: 'error', message: 'Unit selling price must be greater than 0.' });
       return;
     }
 
@@ -68,8 +77,8 @@ export const AddSaleModal: React.FC<AddSaleModalProps> = ({
       date,
       itemCode,
       customer,
-      qty,
-      unitValue,
+      qty: numQty,
+      unitValue: numUnitValue,
     });
 
     if (res.success) {
@@ -118,7 +127,7 @@ export const AddSaleModal: React.FC<AddSaleModalProps> = ({
               type="text"
               value={invoiceNo}
               onChange={(e) => setInvoiceNo(e.target.value)}
-              className="w-full bg-slate-50 dark:bg-slate-900/80 border border-slate-300 dark:border-slate-700 rounded-lg px-3 py-2 text-sm text-slate-900 dark:text-white focus:outline-none focus:border-blue-500 focus:bg-white"
+              className="w-full bg-slate-50 dark:bg-slate-900/80 border border-slate-300 dark:border-slate-700 rounded-lg px-3 py-2 text-sm text-slate-900 dark:text-white focus:outline-none focus:border-blue-500 focus:bg-white dark:focus:bg-slate-900"
               required
             />
           </div>
@@ -131,7 +140,7 @@ export const AddSaleModal: React.FC<AddSaleModalProps> = ({
               type="date"
               value={date}
               onChange={(e) => setDate(e.target.value)}
-              className="w-full bg-slate-50 dark:bg-slate-900/80 border border-slate-300 dark:border-slate-700 rounded-lg px-3 py-2 text-sm text-slate-900 dark:text-white focus:outline-none focus:border-blue-500 focus:bg-white"
+              className="w-full bg-slate-50 dark:bg-slate-900/80 border border-slate-300 dark:border-slate-700 rounded-lg px-3 py-2 text-sm text-slate-900 dark:text-white focus:outline-none focus:border-blue-500 focus:bg-white dark:focus:bg-slate-900"
               required
             />
           </div>
@@ -154,7 +163,7 @@ export const AddSaleModal: React.FC<AddSaleModalProps> = ({
                   const item = items.find((i) => i.code === e.target.value);
                   if (item) setUnitValue(item.standardSellingPrice);
                 }}
-                className="w-full bg-slate-50 dark:bg-slate-900/80 border border-slate-300 dark:border-slate-700 rounded-lg px-3 py-2 text-sm text-slate-900 dark:text-white focus:outline-none focus:border-blue-500 focus:bg-white"
+                className="w-full bg-slate-50 dark:bg-slate-900/80 border border-slate-300 dark:border-slate-700 rounded-lg px-3 py-2 text-sm text-slate-900 dark:text-white focus:outline-none focus:border-blue-500 focus:bg-white dark:focus:bg-slate-900"
                 required
               >
                 {items.map((i) => (
@@ -174,7 +183,7 @@ export const AddSaleModal: React.FC<AddSaleModalProps> = ({
               type="text"
               value={customer}
               onChange={(e) => setCustomer(e.target.value)}
-              className="w-full bg-slate-50 dark:bg-slate-900/80 border border-slate-300 dark:border-slate-700 rounded-lg px-3 py-2 text-sm text-slate-900 dark:text-white focus:outline-none focus:border-blue-500 focus:bg-white"
+              className="w-full bg-slate-50 dark:bg-slate-900/80 border border-slate-300 dark:border-slate-700 rounded-lg px-3 py-2 text-sm text-slate-900 dark:text-white focus:outline-none focus:border-blue-500 focus:bg-white dark:focus:bg-slate-900"
               required
             />
           </div>
@@ -212,8 +221,12 @@ export const AddSaleModal: React.FC<AddSaleModalProps> = ({
               min="1"
               max={availableQty}
               value={qty}
-              onChange={(e) => setQty(parseInt(e.target.value) || 0)}
-              className="w-full bg-slate-50 dark:bg-slate-900/80 border border-slate-300 dark:border-slate-700 rounded-lg px-3 py-2 text-sm text-slate-900 dark:text-white focus:outline-none focus:border-blue-500 focus:bg-white"
+              onFocus={(e) => e.target.select()}
+              onChange={(e) => setQty(handleNumericInput(e.target.value))}
+              onBlur={() => {
+                if (qty === '' || numQty < 1) setQty(1);
+              }}
+              className="w-full bg-slate-50 dark:bg-slate-900/80 border border-slate-300 dark:border-slate-700 rounded-lg px-3 py-2 text-sm text-slate-900 dark:text-white focus:outline-none focus:border-blue-500 focus:bg-white dark:focus:bg-slate-900"
               required
             />
           </div>
@@ -224,11 +237,16 @@ export const AddSaleModal: React.FC<AddSaleModalProps> = ({
             </label>
             <input
               type="number"
-              min="1"
+              min="0"
               step="0.01"
               value={unitValue}
-              onChange={(e) => setUnitValue(parseFloat(e.target.value) || 0)}
-              className="w-full bg-slate-50 dark:bg-slate-900/80 border border-slate-300 dark:border-slate-700 rounded-lg px-3 py-2 text-sm text-slate-900 dark:text-white focus:outline-none focus:border-blue-500 focus:bg-white"
+              placeholder="0"
+              onFocus={(e) => e.target.select()}
+              onChange={(e) => setUnitValue(handleNumericInput(e.target.value))}
+              onBlur={() => {
+                if (unitValue === '') setUnitValue(0);
+              }}
+              className="w-full bg-slate-50 dark:bg-slate-900/80 border border-slate-300 dark:border-slate-700 rounded-lg px-3 py-2 text-sm text-slate-900 dark:text-white focus:outline-none focus:border-blue-500 focus:bg-white dark:focus:bg-slate-900"
               required
             />
           </div>

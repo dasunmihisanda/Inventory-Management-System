@@ -4,6 +4,7 @@ import React, { useState } from 'react';
 import { Modal } from '@/components/ui/Modal';
 import { useInventory } from '@/context/InventoryContext';
 import { PackagePlus, CheckCircle2 } from 'lucide-react';
+import { handleNumericInput } from '@/lib/utils';
 
 interface AddItemModalProps {
   isOpen: boolean;
@@ -17,8 +18,8 @@ export const AddItemModal: React.FC<AddItemModalProps> = ({ isOpen, onClose }) =
   const [name, setName] = useState('');
   const [category, setCategory] = useState('');
   const [unit, setUnit] = useState('Units');
-  const [reorderLevel, setReorderLevel] = useState<number>(10);
-  const [standardSellingPrice, setStandardSellingPrice] = useState<number>(0);
+  const [reorderLevel, setReorderLevel] = useState<number | string>(10);
+  const [standardSellingPrice, setStandardSellingPrice] = useState<number | string>(0);
   const [errorMsg, setErrorMsg] = useState('');
   const [successMsg, setSuccessMsg] = useState(false);
 
@@ -36,13 +37,16 @@ export const AddItemModal: React.FC<AddItemModalProps> = ({ isOpen, onClose }) =
       return;
     }
 
+    const numReorder = parseInt(String(reorderLevel)) || 0;
+    const numSelling = parseFloat(String(standardSellingPrice)) || 0;
+
     addNewItem({
       code: code.trim(),
       name: name.trim(),
       category: category.trim(),
       unit: unit.trim(),
-      reorderLevel,
-      standardSellingPrice,
+      reorderLevel: numReorder,
+      standardSellingPrice: numSelling,
     });
 
     setSuccessMsg(true);
@@ -85,7 +89,7 @@ export const AddItemModal: React.FC<AddItemModalProps> = ({ isOpen, onClose }) =
             placeholder="e.g. SKU-001 or PROD-A"
             value={code}
             onChange={(e) => setCode(e.target.value)}
-            className="w-full bg-slate-50 dark:bg-slate-900/80 border border-slate-300 dark:border-slate-700 rounded-lg px-3 py-2 text-sm text-slate-900 dark:text-white focus:outline-none focus:border-blue-500 focus:bg-white"
+            className="w-full bg-slate-50 dark:bg-slate-900/80 border border-slate-300 dark:border-slate-700 rounded-lg px-3 py-2 text-sm text-slate-900 dark:text-white focus:outline-none focus:border-blue-500 focus:bg-white dark:focus:bg-slate-900"
             required
           />
         </div>
@@ -99,7 +103,7 @@ export const AddItemModal: React.FC<AddItemModalProps> = ({ isOpen, onClose }) =
             placeholder="e.g. Standard Product Description"
             value={name}
             onChange={(e) => setName(e.target.value)}
-            className="w-full bg-slate-50 dark:bg-slate-900/80 border border-slate-300 dark:border-slate-700 rounded-lg px-3 py-2 text-sm text-slate-900 dark:text-white focus:outline-none focus:border-blue-500 focus:bg-white"
+            className="w-full bg-slate-50 dark:bg-slate-900/80 border border-slate-300 dark:border-slate-700 rounded-lg px-3 py-2 text-sm text-slate-900 dark:text-white focus:outline-none focus:border-blue-500 focus:bg-white dark:focus:bg-slate-900"
             required
           />
         </div>
@@ -113,7 +117,7 @@ export const AddItemModal: React.FC<AddItemModalProps> = ({ isOpen, onClose }) =
               type="text"
               value={category}
               onChange={(e) => setCategory(e.target.value)}
-              className="w-full bg-slate-50 dark:bg-slate-900/80 border border-slate-300 dark:border-slate-700 rounded-lg px-3 py-2 text-sm text-slate-900 dark:text-white focus:outline-none focus:border-blue-500 focus:bg-white"
+              className="w-full bg-slate-50 dark:bg-slate-900/80 border border-slate-300 dark:border-slate-700 rounded-lg px-3 py-2 text-sm text-slate-900 dark:text-white focus:outline-none focus:border-blue-500 focus:bg-white dark:focus:bg-slate-900"
             />
           </div>
 
@@ -125,7 +129,7 @@ export const AddItemModal: React.FC<AddItemModalProps> = ({ isOpen, onClose }) =
               type="text"
               value={unit}
               onChange={(e) => setUnit(e.target.value)}
-              className="w-full bg-slate-50 dark:bg-slate-900/80 border border-slate-300 dark:border-slate-700 rounded-lg px-3 py-2 text-sm text-slate-900 dark:text-white focus:outline-none focus:border-blue-500 focus:bg-white"
+              className="w-full bg-slate-50 dark:bg-slate-900/80 border border-slate-300 dark:border-slate-700 rounded-lg px-3 py-2 text-sm text-slate-900 dark:text-white focus:outline-none focus:border-blue-500 focus:bg-white dark:focus:bg-slate-900"
             />
           </div>
         </div>
@@ -139,8 +143,13 @@ export const AddItemModal: React.FC<AddItemModalProps> = ({ isOpen, onClose }) =
               type="number"
               min="0"
               value={reorderLevel}
-              onChange={(e) => setReorderLevel(parseInt(e.target.value) || 0)}
-              className="w-full bg-slate-50 dark:bg-slate-900/80 border border-slate-300 dark:border-slate-700 rounded-lg px-3 py-2 text-sm text-slate-900 dark:text-white focus:outline-none focus:border-blue-500 focus:bg-white"
+              placeholder="0"
+              onFocus={(e) => e.target.select()}
+              onChange={(e) => setReorderLevel(handleNumericInput(e.target.value))}
+              onBlur={() => {
+                if (reorderLevel === '') setReorderLevel(0);
+              }}
+              className="w-full bg-slate-50 dark:bg-slate-900/80 border border-slate-300 dark:border-slate-700 rounded-lg px-3 py-2 text-sm text-slate-900 dark:text-white focus:outline-none focus:border-blue-500 focus:bg-white dark:focus:bg-slate-900"
             />
           </div>
 
@@ -150,10 +159,16 @@ export const AddItemModal: React.FC<AddItemModalProps> = ({ isOpen, onClose }) =
             </label>
             <input
               type="number"
-              min="1"
+              min="0"
+              step="0.01"
               value={standardSellingPrice}
-              onChange={(e) => setStandardSellingPrice(parseFloat(e.target.value) || 0)}
-              className="w-full bg-slate-50 dark:bg-slate-900/80 border border-slate-300 dark:border-slate-700 rounded-lg px-3 py-2 text-sm text-slate-900 dark:text-white focus:outline-none focus:border-blue-500 focus:bg-white"
+              placeholder="0"
+              onFocus={(e) => e.target.select()}
+              onChange={(e) => setStandardSellingPrice(handleNumericInput(e.target.value))}
+              onBlur={() => {
+                if (standardSellingPrice === '') setStandardSellingPrice(0);
+              }}
+              className="w-full bg-slate-50 dark:bg-slate-900/80 border border-slate-300 dark:border-slate-700 rounded-lg px-3 py-2 text-sm text-slate-900 dark:text-white focus:outline-none focus:border-blue-500 focus:bg-white dark:focus:bg-slate-900"
             />
           </div>
         </div>

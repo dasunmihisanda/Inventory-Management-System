@@ -95,8 +95,9 @@ export default function CostingSheetPage() {
                 min="1"
                 step="0.01"
                 value={selectedParams.basePurchaseCost}
+                onFocus={(e) => e.target.select()}
                 onChange={(e) => handleParamChange('basePurchaseCost', parseFloat(e.target.value) || 0)}
-                className="w-full bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-lg px-3 py-1.5 text-xs text-slate-900 dark:text-white"
+                className="w-full bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-lg px-3 py-1.5 text-xs text-slate-900 dark:text-white focus:outline-none focus:border-blue-500 focus:bg-white dark:focus:bg-slate-900"
               />
             </div>
 
@@ -110,8 +111,9 @@ export default function CostingSheetPage() {
                   min="0"
                   step="0.01"
                   value={selectedParams.freightPerUnit}
+                  onFocus={(e) => e.target.select()}
                   onChange={(e) => handleParamChange('freightPerUnit', parseFloat(e.target.value) || 0)}
-                  className="w-full bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-lg px-3 py-1.5 text-xs text-slate-900 dark:text-white"
+                  className="w-full bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-lg px-3 py-1.5 text-xs text-slate-900 dark:text-white focus:outline-none focus:border-blue-500 focus:bg-white dark:focus:bg-slate-900"
                 />
               </div>
 
@@ -124,10 +126,11 @@ export default function CostingSheetPage() {
                   min="0"
                   step="0.5"
                   value={selectedParams.customsDutyPercent}
+                  onFocus={(e) => e.target.select()}
                   onChange={(e) =>
                     handleParamChange('customsDutyPercent', parseFloat(e.target.value) || 0)
                   }
-                  className="w-full bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-lg px-3 py-1.5 text-xs text-slate-900 dark:text-white"
+                  className="w-full bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-lg px-3 py-1.5 text-xs text-slate-900 dark:text-white focus:outline-none focus:border-blue-500 focus:bg-white dark:focus:bg-slate-900"
                 />
               </div>
             </div>
@@ -142,10 +145,11 @@ export default function CostingSheetPage() {
                   min="0"
                   step="0.01"
                   value={selectedParams.insuranceAndHandling}
+                  onFocus={(e) => e.target.select()}
                   onChange={(e) =>
                     handleParamChange('insuranceAndHandling', parseFloat(e.target.value) || 0)
                   }
-                  className="w-full bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-lg px-3 py-1.5 text-xs text-slate-900 dark:text-white"
+                  className="w-full bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-lg px-3 py-1.5 text-xs text-slate-900 dark:text-white focus:outline-none focus:border-blue-500 focus:bg-white dark:focus:bg-slate-900"
                 />
               </div>
 
@@ -158,10 +162,11 @@ export default function CostingSheetPage() {
                   min="0"
                   step="1"
                   value={selectedParams.targetMarkupPercent}
+                  onFocus={(e) => e.target.select()}
                   onChange={(e) =>
                     handleParamChange('targetMarkupPercent', parseFloat(e.target.value) || 0)
                   }
-                  className="w-full bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-lg px-3 py-1.5 text-xs text-slate-900 dark:text-white"
+                  className="w-full bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-lg px-3 py-1.5 text-xs text-slate-900 dark:text-white focus:outline-none focus:border-blue-500 focus:bg-white dark:focus:bg-slate-900"
                 />
               </div>
             </div>
@@ -175,8 +180,9 @@ export default function CostingSheetPage() {
                 min="1"
                 step="0.01"
                 value={selectedParams.actualSellingPrice}
+                onFocus={(e) => e.target.select()}
                 onChange={(e) => handleParamChange('actualSellingPrice', parseFloat(e.target.value) || 0)}
-                className="w-full bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-lg px-3 py-1.5 text-xs text-slate-900 dark:text-white"
+                className="w-full bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-lg px-3 py-1.5 text-xs text-slate-900 dark:text-white focus:outline-none focus:border-blue-500 focus:bg-white dark:focus:bg-slate-900"
               />
             </div>
           </div>

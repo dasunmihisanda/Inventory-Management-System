@@ -4,6 +4,7 @@ import React, { useState } from 'react';
 import { Modal } from '@/components/ui/Modal';
 import { useInventory } from '@/context/InventoryContext';
 import { CheckCircle2, ShoppingBag, AlertCircle, PlusCircle, ListFilter } from 'lucide-react';
+import { handleNumericInput } from '@/lib/utils';
 
 interface AddPurchaseModalProps {
   isOpen: boolean;
@@ -22,11 +23,11 @@ export const AddPurchaseModal: React.FC<AddPurchaseModalProps> = ({
   const [date, setDate] = useState(new Date().toISOString().split('T')[0]);
   const [itemCode, setItemCode] = useState(preselectedItemCode || (items[0]?.code ?? ''));
   const [supplier, setSupplier] = useState('');
-  const [qty, setQty] = useState<number>(1);
-  const [unitValue, setUnitValue] = useState<number>(0);
-  const [freightCost, setFreightCost] = useState<number>(0);
-  const [customsDuty, setCustomsDuty] = useState<number>(0);
-  const [handlingCost, setHandlingCost] = useState<number>(0);
+  const [qty, setQty] = useState<number | string>(1);
+  const [unitValue, setUnitValue] = useState<number | string>(0);
+  const [freightCost, setFreightCost] = useState<number | string>(0);
+  const [customsDuty, setCustomsDuty] = useState<number | string>(0);
+  const [handlingCost, setHandlingCost] = useState<number | string>(0);
   const [isNewSku, setIsNewSku] = useState(items.length === 0);
   const [newSkuCode, setNewSkuCode] = useState('');
   const [newSkuName, setNewSkuName] = useState('');
@@ -52,9 +53,15 @@ export const AddPurchaseModal: React.FC<AddPurchaseModalProps> = ({
     }
   }, [preselectedItemCode, items, itemCode]);
 
-  const subtotal = qty * unitValue;
-  const totalLanded = subtotal + freightCost + customsDuty + handlingCost;
-  const landedPerUnit = qty > 0 ? totalLanded / qty : unitValue;
+  const numQty = parseInt(String(qty)) || 0;
+  const numUnitValue = parseFloat(String(unitValue)) || 0;
+  const numFreight = parseFloat(String(freightCost)) || 0;
+  const numCustoms = parseFloat(String(customsDuty)) || 0;
+  const numHandling = parseFloat(String(handlingCost)) || 0;
+
+  const subtotal = numQty * numUnitValue;
+  const totalLanded = subtotal + numFreight + numCustoms + numHandling;
+  const landedPerUnit = numQty > 0 ? totalLanded / numQty : numUnitValue;
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
@@ -67,12 +74,12 @@ export const AddPurchaseModal: React.FC<AddPurchaseModalProps> = ({
       return;
     }
 
-    if (qty <= 0) {
+    if (numQty <= 0) {
       setErrorMsg('Quantity received must be at least 1.');
       return;
     }
 
-    if (unitValue <= 0) {
+    if (numUnitValue <= 0) {
       setErrorMsg('Unit purchase value must be greater than 0.');
       return;
     }
@@ -97,11 +104,11 @@ export const AddPurchaseModal: React.FC<AddPurchaseModalProps> = ({
       date,
       itemCode: finalItemCode,
       supplier: supplier.trim() || 'General Supplier',
-      qty,
-      unitValue,
-      freightCost,
-      customsDuty,
-      handlingCost,
+      qty: numQty,
+      unitValue: numUnitValue,
+      freightCost: numFreight,
+      customsDuty: numCustoms,
+      handlingCost: numHandling,
     });
 
     setSuccessMsg(true);
@@ -148,7 +155,7 @@ export const AddPurchaseModal: React.FC<AddPurchaseModalProps> = ({
               type="text"
               value={invoiceNo}
               onChange={(e) => setInvoiceNo(e.target.value)}
-              className="w-full bg-slate-50 dark:bg-slate-900/80 border border-slate-300 dark:border-slate-700 rounded-lg px-3 py-2 text-sm text-slate-900 dark:text-white focus:outline-none focus:border-blue-500 focus:bg-white"
+              className="w-full bg-slate-50 dark:bg-slate-900/80 border border-slate-300 dark:border-slate-700 rounded-lg px-3 py-2 text-sm text-slate-900 dark:text-white focus:outline-none focus:border-blue-500 focus:bg-white dark:focus:bg-slate-900"
               required
             />
           </div>
@@ -161,7 +168,7 @@ export const AddPurchaseModal: React.FC<AddPurchaseModalProps> = ({
               type="date"
               value={date}
               onChange={(e) => setDate(e.target.value)}
-              className="w-full bg-slate-50 dark:bg-slate-900/80 border border-slate-300 dark:border-slate-700 rounded-lg px-3 py-2 text-sm text-slate-900 dark:text-white focus:outline-none focus:border-blue-500 focus:bg-white"
+              className="w-full bg-slate-50 dark:bg-slate-900/80 border border-slate-300 dark:border-slate-700 rounded-lg px-3 py-2 text-sm text-slate-900 dark:text-white focus:outline-none focus:border-blue-500 focus:bg-white dark:focus:bg-slate-900"
               required
             />
           </div>
@@ -206,7 +213,7 @@ export const AddPurchaseModal: React.FC<AddPurchaseModalProps> = ({
                     placeholder="e.g. SKU-1001 or A01"
                     value={newSkuCode}
                     onChange={(e) => setNewSkuCode(e.target.value)}
-                    className="w-full bg-white dark:bg-slate-900 border border-slate-300 dark:border-slate-700 rounded-lg px-2.5 py-1.5 text-xs text-slate-900 dark:text-white focus:outline-none focus:border-blue-500"
+                    className="w-full bg-white dark:bg-slate-900 border border-slate-300 dark:border-slate-700 rounded-lg px-2.5 py-1.5 text-xs text-slate-900 dark:text-white focus:outline-none focus:border-blue-500 focus:bg-white dark:focus:bg-slate-900"
                     required={isNewSku}
                   />
                 </div>
@@ -219,7 +226,7 @@ export const AddPurchaseModal: React.FC<AddPurchaseModalProps> = ({
                     placeholder="e.g. Premium Leather Shoe"
                     value={newSkuName}
                     onChange={(e) => setNewSkuName(e.target.value)}
-                    className="w-full bg-white dark:bg-slate-900 border border-slate-300 dark:border-slate-700 rounded-lg px-2.5 py-1.5 text-xs text-slate-900 dark:text-white focus:outline-none focus:border-blue-500"
+                    className="w-full bg-white dark:bg-slate-900 border border-slate-300 dark:border-slate-700 rounded-lg px-2.5 py-1.5 text-xs text-slate-900 dark:text-white focus:outline-none focus:border-blue-500 focus:bg-white dark:focus:bg-slate-900"
                   />
                 </div>
               </div>
@@ -235,7 +242,7 @@ export const AddPurchaseModal: React.FC<AddPurchaseModalProps> = ({
                 const item = items.find((i) => i.code === e.target.value);
                 if (item) setUnitValue(item.lastPurchasePrice);
               }}
-              className="w-full bg-slate-50 dark:bg-slate-900/80 border border-slate-300 dark:border-slate-700 rounded-lg px-3 py-2 text-sm text-slate-900 dark:text-white focus:outline-none focus:border-blue-500 focus:bg-white"
+              className="w-full bg-slate-50 dark:bg-slate-900/80 border border-slate-300 dark:border-slate-700 rounded-lg px-3 py-2 text-sm text-slate-900 dark:text-white focus:outline-none focus:border-blue-500 focus:bg-white dark:focus:bg-slate-900"
               required={!isNewSku}
             >
               {items.map((i) => (
@@ -256,7 +263,7 @@ export const AddPurchaseModal: React.FC<AddPurchaseModalProps> = ({
             placeholder="e.g. Acme Corp Ltd"
             value={supplier}
             onChange={(e) => setSupplier(e.target.value)}
-            className="w-full bg-slate-50 dark:bg-slate-900/80 border border-slate-300 dark:border-slate-700 rounded-lg px-3 py-2 text-sm text-slate-900 dark:text-white focus:outline-none focus:border-blue-500 focus:bg-white"
+            className="w-full bg-slate-50 dark:bg-slate-900/80 border border-slate-300 dark:border-slate-700 rounded-lg px-3 py-2 text-sm text-slate-900 dark:text-white focus:outline-none focus:border-blue-500 focus:bg-white dark:focus:bg-slate-900"
             required
           />
         </div>
@@ -270,8 +277,12 @@ export const AddPurchaseModal: React.FC<AddPurchaseModalProps> = ({
               type="number"
               min="1"
               value={qty}
-              onChange={(e) => setQty(parseInt(e.target.value) || 0)}
-              className="w-full bg-slate-50 dark:bg-slate-900/80 border border-slate-300 dark:border-slate-700 rounded-lg px-3 py-2 text-sm text-slate-900 dark:text-white focus:outline-none focus:border-blue-500 focus:bg-white"
+              onFocus={(e) => e.target.select()}
+              onChange={(e) => setQty(handleNumericInput(e.target.value))}
+              onBlur={() => {
+                if (qty === '' || numQty < 1) setQty(1);
+              }}
+              className="w-full bg-slate-50 dark:bg-slate-900/80 border border-slate-300 dark:border-slate-700 rounded-lg px-3 py-2 text-sm text-slate-900 dark:text-white focus:outline-none focus:border-blue-500 focus:bg-white dark:focus:bg-slate-900"
               required
             />
           </div>
@@ -282,11 +293,16 @@ export const AddPurchaseModal: React.FC<AddPurchaseModalProps> = ({
             </label>
             <input
               type="number"
-              min="1"
+              min="0"
               step="0.01"
               value={unitValue}
-              onChange={(e) => setUnitValue(parseFloat(e.target.value) || 0)}
-              className="w-full bg-slate-50 dark:bg-slate-900/80 border border-slate-300 dark:border-slate-700 rounded-lg px-3 py-2 text-sm text-slate-900 dark:text-white focus:outline-none focus:border-blue-500 focus:bg-white"
+              placeholder="0"
+              onFocus={(e) => e.target.select()}
+              onChange={(e) => setUnitValue(handleNumericInput(e.target.value))}
+              onBlur={() => {
+                if (unitValue === '') setUnitValue(0);
+              }}
+              className="w-full bg-slate-50 dark:bg-slate-900/80 border border-slate-300 dark:border-slate-700 rounded-lg px-3 py-2 text-sm text-slate-900 dark:text-white focus:outline-none focus:border-blue-500 focus:bg-white dark:focus:bg-slate-900"
               required
             />
           </div>
@@ -303,9 +319,15 @@ export const AddPurchaseModal: React.FC<AddPurchaseModalProps> = ({
               <input
                 type="number"
                 min="0"
+                step="0.01"
                 value={freightCost}
-                onChange={(e) => setFreightCost(parseFloat(e.target.value) || 0)}
-                className="w-full bg-white dark:bg-slate-800 border border-slate-300 dark:border-slate-700 rounded-lg px-2.5 py-1.5 text-xs text-slate-900 dark:text-white"
+                placeholder="0"
+                onFocus={(e) => e.target.select()}
+                onChange={(e) => setFreightCost(handleNumericInput(e.target.value))}
+                onBlur={() => {
+                  if (freightCost === '') setFreightCost(0);
+                }}
+                className="w-full bg-white dark:bg-slate-800 border border-slate-300 dark:border-slate-700 rounded-lg px-2.5 py-1.5 text-xs text-slate-900 dark:text-white focus:outline-none focus:border-blue-500 focus:bg-white dark:focus:bg-slate-900"
               />
             </div>
             <div>
@@ -313,9 +335,15 @@ export const AddPurchaseModal: React.FC<AddPurchaseModalProps> = ({
               <input
                 type="number"
                 min="0"
+                step="0.01"
                 value={customsDuty}
-                onChange={(e) => setCustomsDuty(parseFloat(e.target.value) || 0)}
-                className="w-full bg-white dark:bg-slate-800 border border-slate-300 dark:border-slate-700 rounded-lg px-2.5 py-1.5 text-xs text-slate-900 dark:text-white"
+                placeholder="0"
+                onFocus={(e) => e.target.select()}
+                onChange={(e) => setCustomsDuty(handleNumericInput(e.target.value))}
+                onBlur={() => {
+                  if (customsDuty === '') setCustomsDuty(0);
+                }}
+                className="w-full bg-white dark:bg-slate-800 border border-slate-300 dark:border-slate-700 rounded-lg px-2.5 py-1.5 text-xs text-slate-900 dark:text-white focus:outline-none focus:border-blue-500 focus:bg-white dark:focus:bg-slate-900"
               />
             </div>
             <div>
@@ -323,9 +351,15 @@ export const AddPurchaseModal: React.FC<AddPurchaseModalProps> = ({
               <input
                 type="number"
                 min="0"
+                step="0.01"
                 value={handlingCost}
-                onChange={(e) => setHandlingCost(parseFloat(e.target.value) || 0)}
-                className="w-full bg-white dark:bg-slate-800 border border-slate-300 dark:border-slate-700 rounded-lg px-2.5 py-1.5 text-xs text-slate-900 dark:text-white"
+                placeholder="0"
+                onFocus={(e) => e.target.select()}
+                onChange={(e) => setHandlingCost(handleNumericInput(e.target.value))}
+                onBlur={() => {
+                  if (handlingCost === '') setHandlingCost(0);
+                }}
+                className="w-full bg-white dark:bg-slate-800 border border-slate-300 dark:border-slate-700 rounded-lg px-2.5 py-1.5 text-xs text-slate-900 dark:text-white focus:outline-none focus:border-blue-500 focus:bg-white dark:focus:bg-slate-900"
               />
             </div>
           </div>

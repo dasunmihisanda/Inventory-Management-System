@@ -21,14 +21,15 @@ import {
   ResponsiveContainer,
   Legend,
 } from 'recharts';
+import { handleNumericInput } from '@/lib/utils';
 
 export default function AverageCostingPage() {
   const { items, purchases, formatCurrency, theme } = useInventory();
 
   // What-If Simulator state
   const [simItemCode, setSimItemCode] = useState(items[0]?.code ?? '');
-  const [simQty, setSimQty] = useState<number>(500);
-  const [simPrice, setSimPrice] = useState<number>(1050);
+  const [simQty, setSimQty] = useState<number | string>(500);
+  const [simPrice, setSimPrice] = useState<number | string>(1050);
 
   if (items.length === 0) {
     return (
@@ -62,8 +63,10 @@ export default function AverageCostingPage() {
       0
     );
 
-  const newTotalQty = currentPurchasedQty + simQty;
-  const newTotalValue = currentTotalValue + simQty * simPrice;
+  const numSimQty = parseInt(String(simQty)) || 0;
+  const numSimPrice = parseFloat(String(simPrice)) || 0;
+  const newTotalQty = currentPurchasedQty + numSimQty;
+  const newTotalValue = currentTotalValue + numSimQty * numSimPrice;
   const projectedAvco = newTotalQty > 0 ? newTotalValue / newTotalQty : 0;
   const avcoDiff = projectedAvco - (selectedItem?.avcoUnitCost || 0);
   const avcoPercentChange =
@@ -266,8 +269,13 @@ export default function AverageCostingPage() {
                     type="number"
                     min="1"
                     value={simQty}
-                    onChange={(e) => setSimQty(parseInt(e.target.value) || 0)}
-                    className="w-full bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-lg px-3 py-1.5 text-xs text-slate-900 dark:text-white"
+                    placeholder="0"
+                    onFocus={(e) => e.target.select()}
+                    onChange={(e) => setSimQty(handleNumericInput(e.target.value))}
+                    onBlur={() => {
+                      if (simQty === '' || numSimQty < 1) setSimQty(1);
+                    }}
+                    className="w-full bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-lg px-3 py-1.5 text-xs text-slate-900 dark:text-white focus:outline-none focus:border-blue-500 focus:bg-white dark:focus:bg-slate-900"
                   />
                 </div>
                 <div>
@@ -276,10 +284,16 @@ export default function AverageCostingPage() {
                   </label>
                   <input
                     type="number"
-                    min="1"
+                    min="0"
+                    step="0.01"
                     value={simPrice}
-                    onChange={(e) => setSimPrice(parseFloat(e.target.value) || 0)}
-                    className="w-full bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-lg px-3 py-1.5 text-xs text-slate-900 dark:text-white"
+                    placeholder="0"
+                    onFocus={(e) => e.target.select()}
+                    onChange={(e) => setSimPrice(handleNumericInput(e.target.value))}
+                    onBlur={() => {
+                      if (simPrice === '') setSimPrice(0);
+                    }}
+                    className="w-full bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-lg px-3 py-1.5 text-xs text-slate-900 dark:text-white focus:outline-none focus:border-blue-500 focus:bg-white dark:focus:bg-slate-900"
                   />
                 </div>
               </div>

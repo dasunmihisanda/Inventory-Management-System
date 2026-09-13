@@ -5,6 +5,7 @@ import { Modal } from '@/components/ui/Modal';
 import { useInventory } from '@/context/InventoryContext';
 import { DamageReason, DamageAction } from '@/types/inventory';
 import { AlertTriangle, ShieldAlert, CheckCircle2 } from 'lucide-react';
+import { handleNumericInput } from '@/lib/utils';
 
 interface LogDamagedModalProps {
   isOpen: boolean;
@@ -21,11 +22,11 @@ export const LogDamagedModal: React.FC<LogDamagedModalProps> = ({
 
   const [itemCode, setItemCode] = useState(preselectedItemCode || (items[0]?.code ?? ''));
   const [date, setDate] = useState(new Date().toISOString().split('T')[0]);
-  const [qtyDamaged, setQtyDamaged] = useState<number>(1);
+  const [qtyDamaged, setQtyDamaged] = useState<number | string>(1);
   const [reason, setReason] = useState<DamageReason>('Transit Defect');
   const [action, setAction] = useState<DamageAction>('Written Off / Scrapped');
   const [batchRef, setBatchRef] = useState<string>('');
-  const [salvageRecovered, setSalvageRecovered] = useState<number>(0);
+  const [salvageRecovered, setSalvageRecovered] = useState<number | string>(0);
   const [loggedBy, setLoggedBy] = useState('Quality Control Officer');
   const [notes, setNotes] = useState('');
   const [feedback, setFeedback] = useState<{ type: 'success' | 'error'; message: string } | null>(null);
@@ -46,21 +47,24 @@ export const LogDamagedModal: React.FC<LogDamagedModalProps> = ({
     (p) => p.itemCode === itemCode && p.status === 'active' && p.remainingQty > 0
   );
 
-  const estimatedLoss = Math.max(0, qtyDamaged * unitCost - salvageRecovered);
+  const numQtyDamaged = parseInt(String(qtyDamaged)) || 0;
+  const numSalvage = parseFloat(String(salvageRecovered)) || 0;
+
+  const estimatedLoss = Math.max(0, numQtyDamaged * unitCost - numSalvage);
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
     setFeedback(null);
 
-    if (qtyDamaged <= 0) {
+    if (numQtyDamaged <= 0) {
       setFeedback({ type: 'error', message: 'Damaged quantity must be greater than zero.' });
       return;
     }
 
-    if (qtyDamaged > availableQty) {
+    if (numQtyDamaged > availableQty) {
       setFeedback({
         type: 'error',
-        message: `Requested ${qtyDamaged} units exceeds available undamaged inventory (${availableQty}).`,
+        message: `Requested ${numQtyDamaged} units exceeds available undamaged inventory (${availableQty}).`,
       });
       return;
     }
@@ -68,12 +72,12 @@ export const LogDamagedModal: React.FC<LogDamagedModalProps> = ({
     const res = logDamagedItem({
       itemCode,
       date,
-      qtyDamaged,
+      qtyDamaged: numQtyDamaged,
       reason,
       action,
       batchRef: batchRef || undefined,
       unitCostAtDamage: unitCost,
-      salvageValueRecovered: salvageRecovered,
+      salvageValueRecovered: numSalvage,
       loggedBy,
       notes,
     });
@@ -128,7 +132,7 @@ export const LogDamagedModal: React.FC<LogDamagedModalProps> = ({
               <select
                 value={itemCode}
                 onChange={(e) => setItemCode(e.target.value)}
-                className="w-full bg-slate-50 dark:bg-slate-900/80 border border-slate-300 dark:border-slate-700 rounded-lg px-3 py-2 text-sm text-slate-900 dark:text-white focus:outline-none focus:border-blue-500 focus:bg-white"
+                className="w-full bg-slate-50 dark:bg-slate-900/80 border border-slate-300 dark:border-slate-700 rounded-lg px-3 py-2 text-sm text-slate-900 dark:text-white focus:outline-none focus:border-blue-500 focus:bg-white dark:focus:bg-slate-900"
                 required
               >
                 {items.map((i) => (
@@ -148,7 +152,7 @@ export const LogDamagedModal: React.FC<LogDamagedModalProps> = ({
               type="date"
               value={date}
               onChange={(e) => setDate(e.target.value)}
-              className="w-full bg-slate-50 dark:bg-slate-900/80 border border-slate-300 dark:border-slate-700 rounded-lg px-3 py-2 text-sm text-slate-900 dark:text-white focus:outline-none focus:border-blue-500 focus:bg-white"
+              className="w-full bg-slate-50 dark:bg-slate-900/80 border border-slate-300 dark:border-slate-700 rounded-lg px-3 py-2 text-sm text-slate-900 dark:text-white focus:outline-none focus:border-blue-500 focus:bg-white dark:focus:bg-slate-900"
               required
             />
           </div>
@@ -182,8 +186,12 @@ export const LogDamagedModal: React.FC<LogDamagedModalProps> = ({
               min="1"
               max={availableQty}
               value={qtyDamaged}
-              onChange={(e) => setQtyDamaged(parseInt(e.target.value) || 0)}
-              className="w-full bg-slate-50 dark:bg-slate-900/80 border border-slate-300 dark:border-slate-700 rounded-lg px-3 py-2 text-sm text-slate-900 dark:text-white focus:outline-none focus:border-blue-500 focus:bg-white"
+              onFocus={(e) => e.target.select()}
+              onChange={(e) => setQtyDamaged(handleNumericInput(e.target.value))}
+              onBlur={() => {
+                if (qtyDamaged === '' || numQtyDamaged < 1) setQtyDamaged(1);
+              }}
+              className="w-full bg-slate-50 dark:bg-slate-900/80 border border-slate-300 dark:border-slate-700 rounded-lg px-3 py-2 text-sm text-slate-900 dark:text-white focus:outline-none focus:border-blue-500 focus:bg-white dark:focus:bg-slate-900"
               required
             />
             <span className="text-[11px] text-slate-500 dark:text-slate-400 mt-1 block">
@@ -198,7 +206,7 @@ export const LogDamagedModal: React.FC<LogDamagedModalProps> = ({
             <select
               value={batchRef}
               onChange={(e) => setBatchRef(e.target.value)}
-              className="w-full bg-slate-50 dark:bg-slate-900/80 border border-slate-300 dark:border-slate-700 rounded-lg px-3 py-2 text-sm text-slate-900 dark:text-white focus:outline-none focus:border-blue-500 focus:bg-white"
+              className="w-full bg-slate-50 dark:bg-slate-900/80 border border-slate-300 dark:border-slate-700 rounded-lg px-3 py-2 text-sm text-slate-900 dark:text-white focus:outline-none focus:border-blue-500 focus:bg-white dark:focus:bg-slate-900"
             >
               <option value="">Auto-deduct from earliest FIFO lot</option>
               {itemBatches.map((b) => (
@@ -218,7 +226,7 @@ export const LogDamagedModal: React.FC<LogDamagedModalProps> = ({
             <select
               value={reason}
               onChange={(e) => setReason(e.target.value as DamageReason)}
-              className="w-full bg-slate-50 dark:bg-slate-900/80 border border-slate-300 dark:border-slate-700 rounded-lg px-3 py-2 text-sm text-slate-900 dark:text-white focus:outline-none focus:border-blue-500 focus:bg-white"
+              className="w-full bg-slate-50 dark:bg-slate-900/80 border border-slate-300 dark:border-slate-700 rounded-lg px-3 py-2 text-sm text-slate-900 dark:text-white focus:outline-none focus:border-blue-500 focus:bg-white dark:focus:bg-slate-900"
             >
               <option value="Transit Defect">Transit Defect</option>
               <option value="Handling Damage">Handling Damage</option>
@@ -236,7 +244,7 @@ export const LogDamagedModal: React.FC<LogDamagedModalProps> = ({
             <select
               value={action}
               onChange={(e) => setAction(e.target.value as DamageAction)}
-              className="w-full bg-slate-50 dark:bg-slate-900/80 border border-slate-300 dark:border-slate-700 rounded-lg px-3 py-2 text-sm text-slate-900 dark:text-white focus:outline-none focus:border-blue-500 focus:bg-white"
+              className="w-full bg-slate-50 dark:bg-slate-900/80 border border-slate-300 dark:border-slate-700 rounded-lg px-3 py-2 text-sm text-slate-900 dark:text-white focus:outline-none focus:border-blue-500 focus:bg-white dark:focus:bg-slate-900"
             >
               <option value="Written Off / Scrapped">Written Off / Scrapped (Complete Loss)</option>
               <option value="Quarantined for Review">Quarantined for Inspection</option>
@@ -254,10 +262,15 @@ export const LogDamagedModal: React.FC<LogDamagedModalProps> = ({
             <input
               type="number"
               min="0"
+              step="0.01"
               value={salvageRecovered}
-              onChange={(e) => setSalvageRecovered(parseFloat(e.target.value) || 0)}
-              className="w-full bg-slate-50 dark:bg-slate-900/80 border border-slate-300 dark:border-slate-700 rounded-lg px-3 py-2 text-sm text-slate-900 dark:text-white focus:outline-none focus:border-blue-500 focus:bg-white"
-              placeholder="0.00"
+              placeholder="0"
+              onFocus={(e) => e.target.select()}
+              onChange={(e) => setSalvageRecovered(handleNumericInput(e.target.value))}
+              onBlur={() => {
+                if (salvageRecovered === '') setSalvageRecovered(0);
+              }}
+              className="w-full bg-slate-50 dark:bg-slate-900/80 border border-slate-300 dark:border-slate-700 rounded-lg px-3 py-2 text-sm text-slate-900 dark:text-white focus:outline-none focus:border-blue-500 focus:bg-white dark:focus:bg-slate-900"
             />
           </div>
 
@@ -269,7 +282,7 @@ export const LogDamagedModal: React.FC<LogDamagedModalProps> = ({
               type="text"
               value={loggedBy}
               onChange={(e) => setLoggedBy(e.target.value)}
-              className="w-full bg-slate-50 dark:bg-slate-900/80 border border-slate-300 dark:border-slate-700 rounded-lg px-3 py-2 text-sm text-slate-900 dark:text-white focus:outline-none focus:border-blue-500 focus:bg-white"
+              className="w-full bg-slate-50 dark:bg-slate-900/80 border border-slate-300 dark:border-slate-700 rounded-lg px-3 py-2 text-sm text-slate-900 dark:text-white focus:outline-none focus:border-blue-500 focus:bg-white dark:focus:bg-slate-900"
               required
             />
           </div>
@@ -283,7 +296,7 @@ export const LogDamagedModal: React.FC<LogDamagedModalProps> = ({
             rows={2}
             value={notes}
             onChange={(e) => setNotes(e.target.value)}
-            className="w-full bg-slate-50 dark:bg-slate-900/80 border border-slate-300 dark:border-slate-700 rounded-lg px-3 py-2 text-sm text-slate-900 dark:text-white focus:outline-none focus:border-blue-500 focus:bg-white"
+            className="w-full bg-slate-50 dark:bg-slate-900/80 border border-slate-300 dark:border-slate-700 rounded-lg px-3 py-2 text-sm text-slate-900 dark:text-white focus:outline-none focus:border-blue-500 focus:bg-white dark:focus:bg-slate-900"
             placeholder="Describe defect location, container seal condition, or supplier claim ref..."
           />
         </div>
@@ -295,7 +308,7 @@ export const LogDamagedModal: React.FC<LogDamagedModalProps> = ({
             <div>
               <p className="text-xs font-semibold text-rose-900 dark:text-rose-200">Financial Write-Off Impact</p>
               <p className="text-[11px] text-rose-700 dark:text-rose-400/80">
-                Gross Cost: {formatCurrency(qtyDamaged * unitCost)} - Salvage: {formatCurrency(salvageRecovered)}
+                Gross Cost: {formatCurrency(numQtyDamaged * unitCost)} - Salvage: {formatCurrency(numSalvage)}
               </p>
             </div>
           </div>
