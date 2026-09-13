@@ -71,30 +71,6 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     return true;
   };
 
-  // Instant one-click Google Sign-In for demo/testing without blocking on Cloud Console setup
-  const loginWithMockGoogle = (
-    email: string = 'director@abcpvtltd.lk',
-    name: string = 'ABC Executive Director',
-    role: UserProfile['role'] = 'Administrator'
-  ) => {
-    const newUser: UserProfile = {
-      id: `google-user-${Date.now()}`,
-      name,
-      email,
-      avatar: `https://api.dicebear.com/7.x/avataaars/svg?seed=${encodeURIComponent(name)}`,
-      role,
-      authProvider: 'google',
-      lastLogin: new Date().toISOString(),
-    };
-
-    setUser(newUser);
-    try {
-      localStorage.setItem(STORAGE_KEY, JSON.stringify(newUser));
-    } catch (e) {
-      console.error('Failed to persist user session', e);
-    }
-  };
-
   // Sign out user
   const logout = () => {
     setUser(null);
@@ -112,7 +88,6 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
         isAuthenticated: !!user,
         isLoading,
         loginWithGoogleCredential,
-        loginWithMockGoogle,
         logout,
         googleClientId,
       }}

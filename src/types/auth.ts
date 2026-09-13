@@ -13,7 +13,6 @@ export interface AuthContextType {
   isAuthenticated: boolean;
   isLoading: boolean;
   loginWithGoogleCredential: (credential: string) => Promise<boolean>;
-  loginWithMockGoogle: (email?: string, name?: string, role?: UserProfile['role']) => void;
   logout: () => void;
   googleClientId: string;
 }

@@ -5,16 +5,8 @@ import { useRouter, useSearchParams } from 'next/navigation';
 import { useAuth } from '@/context/AuthContext';
 import {
   ShieldCheck,
-  Building2,
   Lock,
-  ArrowRight,
-  CheckCircle2,
-  Boxes,
-  Layers,
-  BarChart3,
   AlertOctagon,
-  Sparkles,
-  Info,
 } from 'lucide-react';
 
 export default function LoginPortal() {
@@ -25,14 +17,10 @@ export default function LoginPortal() {
   const {
     isAuthenticated,
     loginWithGoogleCredential,
-    loginWithMockGoogle,
     googleClientId,
     isLoading,
   } = useAuth();
 
-  const [customEmail, setCustomEmail] = useState('');
-  const [customName, setCustomName] = useState('');
-  const [selectedRole, setSelectedRole] = useState<'Administrator' | 'Inventory Manager' | 'Auditor'>('Administrator');
   const [isSigningIn, setIsSigningIn] = useState(false);
   const [errorMessage, setErrorMessage] = useState<string | null>(null);
   const googleBtnRef = useRef<HTMLDivElement>(null);
@@ -44,7 +32,7 @@ export default function LoginPortal() {
     }
   }, [isAuthenticated, isLoading, returnUrl, router]);
 
-  // Load Google Identity Services (GIS) script if Client ID is configured
+  // Load Google Identity Services (GIS) script
   useEffect(() => {
     if (!googleClientId) return;
 
@@ -60,6 +48,7 @@ export default function LoginPortal() {
           callback: async (response: any) => {
             if (response.credential) {
               setIsSigningIn(true);
+              setErrorMessage(null);
               const success = await loginWithGoogleCredential(response.credential);
               if (success) {
                 router.push(returnUrl);
@@ -74,7 +63,7 @@ export default function LoginPortal() {
         gWindow.google.accounts.id.renderButton(googleBtnRef.current, {
           theme: 'outline',
           size: 'large',
-          width: 320,
+          width: 340,
           text: 'signin_with',
           shape: 'pill',
         });
@@ -88,19 +77,6 @@ export default function LoginPortal() {
       }
     };
   }, [googleClientId, loginWithGoogleCredential, returnUrl, router]);
-
-  const handleFastTrackLogin = (email?: string, name?: string) => {
-    setIsSigningIn(true);
-    setErrorMessage(null);
-    setTimeout(() => {
-      loginWithMockGoogle(
-        email || customEmail || 'director@abcpvtltd.lk',
-        name || customName || 'ABC Executive Director',
-        selectedRole
-      );
-      router.push(returnUrl);
-    }, 400);
-  };
 
   if (isLoading) {
     return (
@@ -147,7 +123,7 @@ export default function LoginPortal() {
                 Sign in to your Account
               </h2>
               <p className="text-xs text-slate-600 dark:text-slate-400 max-w-xs mx-auto">
-                Authenticate using your Google Workspace or authorized company credentials.
+                Use your authorized Google account to access the ABC Enterprise Inventory System.
               </p>
             </div>
 
@@ -158,119 +134,35 @@ export default function LoginPortal() {
               </div>
             )}
 
-            {/* Official Google Identity Button (Rendered when Client ID is configured) */}
-            {googleClientId && (
-              <div className="flex flex-col items-center justify-center space-y-2 pt-2">
+            {/* Google Sign-In Button */}
+            {googleClientId ? (
+              <div className="flex flex-col items-center justify-center space-y-4 pt-2">
                 <div ref={googleBtnRef} className="min-h-[44px]" />
-                <p className="text-[11px] text-slate-400">Standard Google SSO enabled</p>
+
+                {isSigningIn && (
+                  <div className="flex items-center gap-2 text-xs text-blue-600 dark:text-blue-400">
+                    <div className="w-4 h-4 border-2 border-blue-600 border-t-transparent rounded-full animate-spin" />
+                    <span>Authenticating with Google...</span>
+                  </div>
+                )}
+
+                <p className="text-[11px] text-slate-400 text-center">
+                  Secured with Google OAuth 2.0 Single Sign-On
+                </p>
+              </div>
+            ) : (
+              <div className="p-4 bg-amber-50 dark:bg-amber-950/40 border border-amber-200 dark:border-amber-800 rounded-xl text-xs text-amber-700 dark:text-amber-300 text-center space-y-1">
+                <p className="font-semibold">Google Sign-In not configured</p>
+                <p className="text-[11px] text-amber-600 dark:text-amber-400">
+                  Please set the <code className="bg-amber-100 dark:bg-amber-900/60 px-1 py-0.5 rounded text-[10px]">NEXT_PUBLIC_GOOGLE_CLIENT_ID</code> environment variable.
+                </p>
               </div>
             )}
-
-            {/* Primary Google Sign-In Action */}
-            <div className="space-y-3">
-              <button
-                type="button"
-                onClick={() => handleFastTrackLogin()}
-                disabled={isSigningIn}
-                className="w-full py-3 px-4 rounded-xl border border-slate-300 dark:border-slate-700 bg-white dark:bg-slate-800 hover:bg-slate-50 dark:hover:bg-slate-750 text-slate-800 dark:text-slate-100 font-semibold text-xs shadow-xs hover:shadow-md transition-all flex items-center justify-center gap-3 cursor-pointer group"
-              >
-                {/* Google Multicolor SVG Logo */}
-                <svg className="w-4 h-4 shrink-0" viewBox="0 0 24 24">
-                  <path
-                    fill="#4285F4"
-                    d="M23.745 12.27c0-.7-.06-1.4-.19-2.07H12v4.51h6.6c-.29 1.52-1.14 2.82-2.4 3.68v3.05h3.88c2.27-2.09 3.665-5.17 3.665-9.17z"
-                  />
-                  <path
-                    fill="#34A853"
-                    d="M12 24c3.24 0 5.95-1.08 7.93-2.91l-3.88-3.05c-1.08.72-2.45 1.16-4.05 1.16-3.12 0-5.77-2.1-6.72-4.93H1.26v3.15C3.25 21.36 7.33 24 12 24z"
-                  />
-                  <path
-                    fill="#FBBC05"
-                    d="M5.28 14.27c-.25-.72-.38-1.49-.38-2.27s.13-1.55.38-2.27V6.58H1.26C.46 8.16 0 9.98 0 12s.46 3.84 1.26 5.42l4.02-3.15z"
-                  />
-                  <path
-                    fill="#EA4335"
-                    d="M12 4.75c1.77 0 3.35.61 4.6 1.8l3.42-3.42C17.95 1.19 15.24 0 12 0 7.33 0 3.25 2.64 1.26 6.58l4.02 3.15c.95-2.83 3.6-4.98 6.72-4.98z"
-                  />
-                </svg>
-                <span>Continue with Google (ABC Executive)</span>
-              </button>
-
-              <div className="relative flex py-2 items-center">
-                <div className="flex-grow border-t border-slate-200 dark:border-slate-800"></div>
-                <span className="flex-shrink mx-3 text-[10px] uppercase font-bold tracking-wider text-slate-500">
-                  Or Sign In with Custom Google Email
-                </span>
-                <div className="flex-grow border-t border-slate-200 dark:border-slate-800"></div>
-              </div>
-
-              {/* Custom Google Email Input Form */}
-              <div className="space-y-3 pt-1">
-                <div>
-                  <label className="block text-[11px] font-semibold text-slate-700 dark:text-slate-300 mb-1">
-                    Your Google / Company Email
-                  </label>
-                  <input
-                    type="email"
-                    placeholder="e.g. yourname@gmail.com or name@abcpvtltd.lk"
-                    value={customEmail}
-                    onChange={(e) => setCustomEmail(e.target.value)}
-                    className="w-full px-3 py-2 text-xs rounded-xl bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 text-slate-900 dark:text-white placeholder-slate-400 focus:outline-none focus:border-blue-500 transition-colors"
-                  />
-                </div>
-
-                <div className="grid grid-cols-2 gap-2">
-                  <div>
-                    <label className="block text-[11px] font-semibold text-slate-700 dark:text-slate-300 mb-1">
-                      Full Name
-                    </label>
-                    <input
-                      type="text"
-                      placeholder="e.g. John Perera"
-                      value={customName}
-                      onChange={(e) => setCustomName(e.target.value)}
-                      className="w-full px-3 py-2 text-xs rounded-xl bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 text-slate-900 dark:text-white placeholder-slate-400 focus:outline-none focus:border-blue-500 transition-colors"
-                    />
-                  </div>
-
-                  <div>
-                    <label className="block text-[11px] font-semibold text-slate-700 dark:text-slate-300 mb-1">
-                      Assigned Role
-                    </label>
-                    <select
-                      value={selectedRole}
-                      onChange={(e) => setSelectedRole(e.target.value as any)}
-                      className="w-full px-3 py-2 text-xs rounded-xl bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 text-slate-900 dark:text-white focus:outline-none focus:border-blue-500 transition-colors cursor-pointer"
-                    >
-                      <option value="Administrator">Administrator</option>
-                      <option value="Inventory Manager">Inventory Manager</option>
-                      <option value="Auditor">Financial Auditor</option>
-                    </select>
-                  </div>
-                </div>
-
-                <button
-                  type="button"
-                  onClick={() => handleFastTrackLogin(customEmail, customName)}
-                  disabled={isSigningIn}
-                  className="w-full mt-2 py-2.5 px-4 rounded-xl bg-blue-600 hover:bg-blue-500 text-white font-semibold text-xs shadow-md shadow-blue-600/30 transition-all flex items-center justify-center gap-2 cursor-pointer"
-                >
-                  {isSigningIn ? (
-                    <div className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin" />
-                  ) : (
-                    <>
-                      <span>Sign In & Open Dashboard</span>
-                      <ArrowRight className="w-3.5 h-3.5" />
-                    </>
-                  )}
-                </button>
-              </div>
-            </div>
 
             {/* Security note */}
             <div className="pt-2 text-center text-[11px] text-slate-500 dark:text-slate-400 border-t border-slate-200 dark:border-slate-800">
               <p>Protected by ABC (PVT) LTD Enterprise Access Control.</p>
-              <p className="mt-0.5 text-[10px]">Session secured with role-based segregation.</p>
+              <p className="mt-0.5 text-[10px]">Only authorized Google accounts can access this system.</p>
             </div>
           </div>
         </div>
