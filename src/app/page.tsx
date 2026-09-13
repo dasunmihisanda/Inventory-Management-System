@@ -141,7 +141,9 @@ export default function DashboardPage() {
           icon={DollarSign}
           variant="emerald"
           trend={{
-            value: `Diff: ${formatCurrency(Math.abs(overallStats.totalFifoValuation - overallStats.totalAvcoValuation))}`,
+            value: `Diff: ${
+              overallStats.totalFifoValuation > overallStats.totalAvcoValuation ? '+' : ''
+            }${formatCurrency(overallStats.totalFifoValuation - overallStats.totalAvcoValuation)}`,
             isPositive: overallStats.totalFifoValuation >= overallStats.totalAvcoValuation,
             label: 'FIFO vs AVCO variance',
           }}

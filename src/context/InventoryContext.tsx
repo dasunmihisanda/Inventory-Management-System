@@ -258,26 +258,72 @@ export const InventoryProvider = ({ children }: { children: ReactNode }) => {
       const itemDamaged = damagedItems.filter((d) => (d.itemCode ? String(d.itemCode).trim().toLowerCase() : '') === baseCodeLower);
 
       const totalPurchasedQty = itemPurchases.reduce((acc, p) => acc + (Number(p.qty) || 0), 0);
-      const totalPurchasedValue = itemPurchases.reduce((acc, p) => acc + (Number(p.totalValue) || 0), 0);
+      const totalPurchasedValue = itemPurchases.reduce(
+        (acc, p) =>
+          acc +
+          (Number(p.totalLandedCost) ||
+            Number(p.totalValue) ||
+            (Number(p.qty) * Number(p.unitValue)) ||
+            0),
+        0
+      );
       const totalSoldQty = itemSales.reduce((acc, s) => acc + (Number(s.qty) || 0), 0);
       const damagedQty = itemDamaged.reduce((acc, d) => acc + (Number(d.qtyDamaged) || 0), 0);
 
       // Available QTY = Total Purchased - Total Sold - Damaged
       const availableQty = Math.max(0, totalPurchasedQty - totalSoldQty - damagedQty);
 
-      // Weighted Average Cost (AVCO)
+      // Weighted Average Cost (AVCO) under LKAS 2 / IAS 2
       const avcoUnitCost = totalPurchasedQty > 0 ? totalPurchasedValue / totalPurchasedQty : 0;
       const avcoValuation = availableQty * avcoUnitCost;
 
-      // FIFO valuation: sum remaining units in open batches
-      const activeBatches = itemPurchases.filter((p) => p.status === 'active' && (Number(p.remainingQty) > 0));
-      const fifoValuation = activeBatches.reduce((acc, b) => acc + (Number(b.remainingQty) || 0) * (Number(b.unitValue) || 0), 0);
+      // FIFO valuation: Ending inventory on hand (availableQty) valued using FIFO
+      // Under FIFO, stock remaining on hand consists of the most recently acquired batches
+      let fifoValuation = 0;
+      if (availableQty > 0) {
+        const activeBatches = itemPurchases.filter(
+          (p) =>
+            p.status !== 'depleted' &&
+            (p.remainingQty !== undefined ? Number(p.remainingQty) > 0 : Number(p.qty) > 0)
+        );
+        const activeRemainingSum = activeBatches.reduce(
+          (acc, b) => acc + (b.remainingQty !== undefined ? Number(b.remainingQty) : Number(b.qty)),
+          0
+        );
+
+        if (activeBatches.length > 0 && activeRemainingSum === availableQty) {
+          fifoValuation = activeBatches.reduce(
+            (acc, b) =>
+              acc +
+              (b.remainingQty !== undefined ? Number(b.remainingQty) : Number(b.qty)) *
+                (Number(b.landedUnitCost) || Number(b.unitValue) || 0),
+            0
+          );
+        } else {
+          // Standard FIFO layer allocation: allocate availableQty to newest batches first
+          let needed = availableQty;
+          const sortedPurchases = [...itemPurchases].sort(
+            (a, b) => new Date(b.date).getTime() - new Date(a.date).getTime()
+          );
+          for (const p of sortedPurchases) {
+            if (needed <= 0) break;
+            const pQty = Number(p.qty) || 0;
+            const take = Math.min(needed, pQty);
+            const unitCost = Number(p.landedUnitCost) || Number(p.unitValue) || 0;
+            fifoValuation += take * unitCost;
+            needed -= take;
+          }
+        }
+      }
+
       const fifoUnitCost = availableQty > 0 ? fifoValuation / availableQty : avcoUnitCost;
 
       const lastPurchase = [...itemPurchases].sort(
         (a, b) => new Date(b.date).getTime() - new Date(a.date).getTime()
       )[0];
-      const lastPurchasePrice = lastPurchase ? (Number(lastPurchase.unitValue) || 0) : base.standardSellingPrice * 0.65;
+      const lastPurchasePrice = lastPurchase
+        ? (Number(lastPurchase.landedUnitCost) || Number(lastPurchase.unitValue) || 0)
+        : base.standardSellingPrice * 0.65;
 
       return {
         ...base,
@@ -287,55 +333,40 @@ export const InventoryProvider = ({ children }: { children: ReactNode }) => {
         availableQty,
         avcoUnitCost: Math.round(avcoUnitCost * 100) / 100,
         fifoUnitCost: Math.round(fifoUnitCost * 100) / 100,
-        lastPurchasePrice,
+        lastPurchasePrice: Math.round(lastPurchasePrice * 100) / 100,
         avcoValuation: Math.round(avcoValuation * 100) / 100,
         fifoValuation: Math.round(fifoValuation * 100) / 100,
       };
     });
   }, [rawItems, purchases, sales, damagedItems]);
 
-  // Overall summary metrics with direct ledger verification
+  // Overall summary metrics calculated directly from actual current inventory
   const overallStats = useMemo(() => {
-    // 1. Ledger-direct computations (100% mathematical integrity)
-    const ledgerTotalPurchased = purchases.reduce((acc, p) => acc + (Number(p.qty) || 0), 0);
-    const ledgerTotalSold = sales.reduce((acc, s) => acc + (Number(s.qty) || 0), 0);
-    const ledgerTotalDamaged = damagedItems.reduce((acc, d) => acc + (Number(d.qtyDamaged) || 0), 0);
-    const directAvailableUnits = Math.max(0, ledgerTotalPurchased - ledgerTotalSold - ledgerTotalDamaged);
-
-    // 2. Item-level rollups
-    const itemsAvailableUnits = items.reduce((acc, i) => acc + (Number(i.availableQty) || 0), 0);
-    const totalAvailableUnits = Math.max(directAvailableUnits, itemsAvailableUnits);
-
-    const itemsTotalStock = items.reduce(
+    // 1. Available and Stock quantities
+    const totalAvailableUnits = items.reduce((acc, i) => acc + (Number(i.availableQty) || 0), 0);
+    const totalStockUnits = items.reduce(
       (acc, i) => acc + (Number(i.totalPurchasedQty) || 0) - (Number(i.totalSoldQty) || 0),
       0
     );
-    const totalStockUnits = Math.max(ledgerTotalPurchased - ledgerTotalSold, itemsTotalStock);
+    const totalDamagedUnits = items.reduce((acc, i) => acc + (Number(i.damagedQty) || 0), 0);
 
-    const totalDamagedUnits = Math.max(
-      ledgerTotalDamaged,
-      items.reduce((acc, i) => acc + (Number(i.damagedQty) || 0), 0)
-    );
+    // 2. Comprehensive Inventory Valuations (calculated directly from actual current inventory)
+    const totalAvcoValuation =
+      Math.round(items.reduce((acc, i) => acc + (Number(i.avcoValuation) || 0), 0) * 100) / 100;
+    const totalFifoValuation =
+      Math.round(items.reduce((acc, i) => acc + (Number(i.fifoValuation) || 0), 0) * 100) / 100;
 
-    // Direct active batch valuation
-    const activeBatches = purchases.filter((p) => p.status === 'active');
-    const directValuation = activeBatches.reduce(
-      (acc, b) =>
-        acc +
-        (Number(b.remainingQty !== undefined ? b.remainingQty : b.qty) || 0) * (Number(b.unitValue) || 0),
-      0
-    );
-
-    const itemsAvcoValuation = items.reduce((acc, i) => acc + (Number(i.avcoValuation) || 0), 0);
-    const itemsFifoValuation = items.reduce((acc, i) => acc + (Number(i.fifoValuation) || 0), 0);
-    const totalAvcoValuation = Math.max(directValuation, itemsAvcoValuation);
-    const totalFifoValuation = Math.max(directValuation, itemsFifoValuation);
-
-    const totalRevenue = sales.reduce((acc, s) => acc + (Number(s.totalValue) || 0), 0);
-    const totalFifoCogs = sales.reduce((acc, s) => acc + (Number(s.fifoCogs) || 0), 0);
-    const totalGrossProfit = totalRevenue - totalFifoCogs;
-    const totalDamagedLoss = damagedItems.reduce((acc, d) => acc + (Number(d.netLoss) || 0), 0);
-    const totalDamagedSalvage = damagedItems.reduce((acc, d) => acc + (Number(d.salvageValueRecovered) || 0), 0);
+    const totalRevenue =
+      Math.round(sales.reduce((acc, s) => acc + (Number(s.totalValue) || 0), 0) * 100) / 100;
+    const totalFifoCogs =
+      Math.round(sales.reduce((acc, s) => acc + (Number(s.fifoCogs) || 0), 0) * 100) / 100;
+    const totalGrossProfit = Math.round((totalRevenue - totalFifoCogs) * 100) / 100;
+    const totalDamagedLoss =
+      Math.round(damagedItems.reduce((acc, d) => acc + (Number(d.netLoss) || 0), 0) * 100) / 100;
+    const totalDamagedSalvage =
+      Math.round(
+        damagedItems.reduce((acc, d) => acc + (Number(d.salvageValueRecovered) || 0), 0) * 100
+      ) / 100;
     const lowStockCount = items.filter((i) => i.availableQty <= i.reorderLevel).length;
 
     return {
@@ -351,15 +382,17 @@ export const InventoryProvider = ({ children }: { children: ReactNode }) => {
       totalDamagedSalvage,
       lowStockCount,
     };
-  }, [items, purchases, sales, damagedItems]);
+  }, [items, sales, damagedItems]);
 
   // Currency formatting helper
   const formatCurrency = (amount: number): string => {
+    const isNegative = amount < 0;
+    const absVal = Math.abs(amount);
     const formatted = new Intl.NumberFormat('en-LK', {
       minimumFractionDigits: 2,
       maximumFractionDigits: 2,
-    }).format(amount);
-    return `${currency} ${formatted}`;
+    }).format(absVal);
+    return isNegative ? `-${currency} ${formatted}` : `${currency} ${formatted}`;
   };
 
   // Dispatcher: Add new purchase order / GRN
@@ -553,45 +586,46 @@ export const InventoryProvider = ({ children }: { children: ReactNode }) => {
     };
 
     // If batch reference exists, deduct from that batch's remainingQty so FIFO stays balanced
+    let updatedPurchases: PurchaseBatch[] = [];
     if (damageData.batchRef) {
-      setPurchases((prev) =>
-        prev.map((b) => {
-          if (b.id === damageData.batchRef || b.invoiceNo === damageData.batchRef) {
-            const newRemaining = Math.max(0, b.remainingQty - damageData.qtyDamaged);
-            return {
-              ...b,
-              remainingQty: newRemaining,
-              status: newRemaining === 0 ? 'depleted' : 'active',
-            };
-          }
-          return b;
-        })
-      );
+      updatedPurchases = purchases.map((b) => {
+        if (b.id === damageData.batchRef || b.invoiceNo === damageData.batchRef) {
+          const currentRem = b.remainingQty !== undefined ? Number(b.remainingQty) : Number(b.qty);
+          const newRemaining = Math.max(0, currentRem - damageData.qtyDamaged);
+          return {
+            ...b,
+            remainingQty: newRemaining,
+            status: newRemaining === 0 ? 'depleted' : 'active',
+          };
+        }
+        return b;
+      });
     } else {
       // Deduct from earliest active batch of that item
       let needed = damageData.qtyDamaged;
-      setPurchases((prev) =>
-        prev.map((b) => {
-          if (b.itemCode.trim().toLowerCase() === cleanDamageCode && b.status === 'active' && b.remainingQty > 0 && needed > 0) {
-            const deduct = Math.min(b.remainingQty, needed);
-            needed -= deduct;
-            const rem = b.remainingQty - deduct;
-            return {
-              ...b,
-              remainingQty: rem,
-              status: rem === 0 ? 'depleted' : 'active',
-            };
-          }
-          return b;
-        })
-      );
+      updatedPurchases = purchases.map((b) => {
+        const bCode = b.itemCode ? b.itemCode.trim().toLowerCase() : '';
+        const currentRem = b.remainingQty !== undefined ? Number(b.remainingQty) : Number(b.qty);
+        if (bCode === cleanDamageCode && b.status === 'active' && currentRem > 0 && needed > 0) {
+          const deduct = Math.min(currentRem, needed);
+          needed -= deduct;
+          const rem = currentRem - deduct;
+          return {
+            ...b,
+            remainingQty: rem,
+            status: rem === 0 ? 'depleted' : 'active',
+          };
+        }
+        return b;
+      });
     }
 
+    setPurchases(updatedPurchases);
     setDamagedItems((prev) => [newDamageRecord, ...prev]);
 
     // Supabase cloud persistence
     if (isSupabaseConfigured()) {
-      syncDamageToSupabase(newDamageRecord);
+      syncDamageToSupabase(newDamageRecord, updatedPurchases);
     }
 
     return {
@@ -676,7 +710,7 @@ export const InventoryProvider = ({ children }: { children: ReactNode }) => {
 
   // Helper: IDF Classification (Fast / Slow / Non-Moving)
   const getIdfMetrics = (): IDFMetrics[] => {
-    const today = new Date('2025-02-15').getTime(); // Reference point aligned with dataset dates
+    const today = Date.now();
 
     return items.map((item) => {
       const itemSales = sales.filter((s) => s.itemCode === item.code);

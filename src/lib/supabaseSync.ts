@@ -63,8 +63,12 @@ export async function fetchFromSupabase(): Promise<SupabaseSyncData | null> {
       handlingCost: Number(row.handling_cost) || 0,
       totalLandedCost: Number(row.total_landed_cost) || Number(row.total_value),
       landedUnitCost: Number(row.landed_unit_cost) || Number(row.unit_value),
-      remainingQty: Number(row.remaining_qty),
-      status: row.status as 'active' | 'depleted',
+      remainingQty:
+        row.remaining_qty !== null && row.remaining_qty !== undefined
+          ? Number(row.remaining_qty)
+          : Number(row.qty),
+      status: (row.status ||
+        (Number(row.remaining_qty) === 0 ? 'depleted' : 'active')) as 'active' | 'depleted',
     }));
 
     const sales: SaleRecord[] = (salesRes.data || []).map((row: any) => ({
@@ -240,7 +244,7 @@ export async function syncSaleToSupabase(sale: SaleRecord, updatedBatches?: Purc
 /**
  * Persist damaged item record
  */
-export async function syncDamageToSupabase(damage: DamagedItemRecord) {
+export async function syncDamageToSupabase(damage: DamagedItemRecord, updatedBatches?: PurchaseBatch[]) {
   if (!supabase) return;
   try {
     await supabase.from('damaged_items').upsert({
@@ -257,6 +261,18 @@ export async function syncDamageToSupabase(damage: DamagedItemRecord) {
       logged_by: damage.loggedBy,
       notes: damage.notes || null,
     });
+
+    if (updatedBatches && updatedBatches.length > 0) {
+      for (const b of updatedBatches) {
+        await supabase
+          .from('purchase_batches')
+          .update({
+            remaining_qty: b.remainingQty,
+            status: b.status,
+          })
+          .eq('id', b.id);
+      }
+    }
   } catch (e) {
     console.error('Error syncing damage record to Supabase:', e);
   }

@@ -147,7 +147,7 @@ export default function InventoryValuationPage() {
                 <th className="text-right text-blue-600 dark:text-blue-400 font-bold">AVCO Value</th>
                 <th className="text-right">FIFO Cost</th>
                 <th className="text-right text-emerald-600 dark:text-emerald-400 font-bold">FIFO Value</th>
-                <th className="text-right">Variance ($)</th>
+                <th className="text-right">Variance (FIFO - AVCO)</th>
                 <th className="text-right font-bold text-purple-600 dark:text-purple-400">Retail Potential</th>
               </tr>
             </thead>
@@ -189,6 +189,41 @@ export default function InventoryValuationPage() {
                 );
               })}
             </tbody>
+            <tfoot>
+              <tr className="font-bold bg-slate-100/80 dark:bg-slate-800/80 border-t-2 border-slate-300 dark:border-slate-700 text-xs">
+                <td colSpan={2} className="uppercase text-slate-700 dark:text-slate-300 tracking-wider">
+                  Portfolio Total:
+                </td>
+                <td className="text-right text-slate-900 dark:text-white font-bold">
+                  {overallStats.totalAvailableUnits} Units
+                </td>
+                <td className="text-right text-slate-400">-</td>
+                <td className="text-right font-mono font-bold text-blue-600 dark:text-blue-400 text-sm">
+                  {formatCurrency(overallStats.totalAvcoValuation)}
+                </td>
+                <td className="text-right text-slate-400">-</td>
+                <td className="text-right font-mono font-bold text-emerald-600 dark:text-emerald-400 text-sm">
+                  {formatCurrency(overallStats.totalFifoValuation)}
+                </td>
+                <td className="text-right font-mono">
+                  <span
+                    className={`text-xs px-2 py-0.5 rounded font-bold border ${
+                      varianceValuation > 0
+                        ? 'text-emerald-700 dark:text-emerald-300 bg-emerald-50 dark:bg-emerald-950/60 border-emerald-200 dark:border-emerald-800'
+                        : varianceValuation < 0
+                        ? 'text-amber-700 dark:text-amber-300 bg-amber-50 dark:bg-amber-950/60 border-amber-200 dark:border-amber-800'
+                        : 'text-slate-600 dark:text-slate-400 bg-slate-100 dark:bg-slate-800 border-slate-200 dark:border-slate-700'
+                    }`}
+                  >
+                    {varianceValuation >= 0 ? '+' : ''}
+                    {formatCurrency(varianceValuation)}
+                  </span>
+                </td>
+                <td className="text-right font-mono font-bold text-purple-600 dark:text-purple-300 text-sm">
+                  {formatCurrency(totalRetailValuation)}
+                </td>
+              </tr>
+            </tfoot>
           </table>
         </div>
       </div>

@@ -47,8 +47,20 @@ export default function AverageCostingPage() {
   // Simulator calculation
   const currentPurchasedQty = selectedItem?.totalPurchasedQty || 0;
   const currentTotalValue = purchases
-    .filter((p) => p.itemCode === selectedItem?.code)
-    .reduce((acc, p) => acc + p.totalValue, 0);
+    .filter(
+      (p) =>
+        (p.itemCode ? p.itemCode.trim().toLowerCase() : '') ===
+        (selectedItem?.code ? selectedItem.code.trim().toLowerCase() : '')
+    )
+    .reduce(
+      (acc, p) =>
+        acc +
+        (Number(p.totalLandedCost) ||
+          Number(p.totalValue) ||
+          Number(p.qty) * Number(p.unitValue) ||
+          0),
+      0
+    );
 
   const newTotalQty = currentPurchasedQty + simQty;
   const newTotalValue = currentTotalValue + simQty * simPrice;
@@ -136,8 +148,20 @@ export default function AverageCostingPage() {
                     <td className="text-right font-mono text-slate-700 dark:text-slate-300">
                       {formatCurrency(
                         purchases
-                          .filter((p) => p.itemCode === item.code)
-                          .reduce((acc, p) => acc + p.totalValue, 0)
+                          .filter(
+                            (p) =>
+                              (p.itemCode ? p.itemCode.trim().toLowerCase() : '') ===
+                              item.code.trim().toLowerCase()
+                          )
+                          .reduce(
+                            (acc, p) =>
+                              acc +
+                              (Number(p.totalLandedCost) ||
+                                Number(p.totalValue) ||
+                                Number(p.qty) * Number(p.unitValue) ||
+                                0),
+                            0
+                          )
                       )}
                     </td>
                     <td className="text-right font-mono font-bold text-blue-600 dark:text-blue-400 text-sm">

@@ -34,11 +34,11 @@ export default function FifoAnalysisPage() {
 
   // Batches for selected item sorted chronologically
   const itemBatches = purchases
-    .filter((p) => p.itemCode === selectedItemCode)
+    .filter((p) => (p.itemCode ? p.itemCode.trim().toLowerCase() : '') === selectedItemCode.trim().toLowerCase())
     .sort((a, b) => new Date(a.date).getTime() - new Date(b.date).getTime());
 
-  // FIFO Aging Calculation (reference date 2025-02-15)
-  const refDate = new Date('2025-02-15').getTime();
+  // FIFO Aging Calculation relative to current date
+  const refDate = Date.now();
 
   let tier0_30 = 0;
   let tier31_60 = 0;
@@ -46,10 +46,11 @@ export default function FifoAnalysisPage() {
   let tier90Plus = 0;
 
   purchases
-    .filter((p) => p.status === 'active' && p.remainingQty > 0)
+    .filter((p) => p.status === 'active' && (p.remainingQty !== undefined ? p.remainingQty > 0 : p.qty > 0))
     .forEach((p) => {
-      const days = Math.floor((refDate - new Date(p.date).getTime()) / (1000 * 60 * 60 * 24));
-      const val = p.remainingQty * p.unitValue;
+      const days = Math.max(0, Math.floor((refDate - new Date(p.date).getTime()) / (1000 * 60 * 60 * 24)));
+      const remQty = p.remainingQty !== undefined ? p.remainingQty : p.qty;
+      const val = remQty * (Number(p.landedUnitCost) || Number(p.unitValue) || 0);
       if (days <= 30) tier0_30 += val;
       else if (days <= 60) tier31_60 += val;
       else if (days <= 90) tier61_90 += val;
