@@ -93,7 +93,7 @@ export default function AverageCostingPage() {
       </div>
 
       {/* Formula & Explanation Card */}
-      <div className="rounded-2xl bg-blue-50/60 dark:bg-gradient-to-r dark:from-blue-950/30 dark:via-slate-900/40 dark:to-slate-900/60 border border-blue-200 dark:border-blue-900/40 p-5 shadow-xs dark:shadow-lg">
+      <div className="rounded-2xl bg-blue-50/60 dark:bg-slate-900 dark:bg-gradient-to-r dark:from-blue-950/40 dark:via-slate-900 dark:to-slate-900 border border-blue-200 dark:border-blue-900/40 p-5 shadow-xs dark:shadow-lg">
         <div className="flex items-start gap-3">
           <div className="p-2 rounded-xl bg-blue-100 dark:bg-blue-500/10 text-blue-600 dark:text-blue-400 border border-blue-200 dark:border-blue-500/20 shrink-0">
             <Info className="w-5 h-5" />
@@ -287,7 +287,7 @@ export default function AverageCostingPage() {
           </div>
 
           {/* Simulation Output Card */}
-          <div className="mt-4 p-4 rounded-xl bg-blue-50/70 dark:bg-blue-950/20 border border-blue-200 dark:border-blue-900/40 space-y-2">
+          <div className="mt-4 p-4 rounded-xl bg-blue-50/70 dark:bg-slate-900/90 dark:border-blue-900/40 border border-blue-200 space-y-2">
             <div className="flex items-center justify-between text-xs">
               <span className="text-slate-600 dark:text-slate-400">Current Unit AVCO:</span>
               <span className="font-semibold text-slate-900 dark:text-white">

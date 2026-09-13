@@ -119,7 +119,7 @@ export default function InventoryValuationPage() {
       </div>
 
       {/* Accounting Compliance Note */}
-      <div className="p-4 rounded-xl bg-purple-50 dark:bg-purple-950/20 border border-purple-200 dark:border-purple-900/40 flex items-start gap-3 shadow-xs">
+      <div className="p-4 rounded-xl bg-purple-50 dark:bg-slate-900/80 border border-purple-200 dark:border-purple-900/40 flex items-start gap-3 shadow-xs">
         <Scale className="w-5 h-5 text-purple-600 dark:text-purple-400 shrink-0 mt-0.5" />
         <div className="text-xs text-slate-700 dark:text-slate-300 space-y-1">
           <p className="font-bold text-slate-900 dark:text-white">Managerial & Statutory Accounting Notes</p>
